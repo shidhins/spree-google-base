@@ -1,24 +1,29 @@
-<% content_for :head do -%>
-<%= stylesheet_link_tag 'google_base.css' %>
-<% end -%>
+<% content_for :page_title do %>
+  <%= Spree.t(:taxonomy_mapping, :scope => :google_base) %>
+<% end %>
 
 <div id="google_base_map">
-<h1>Google Base Taxonomy Mapping</h1>
-<a href="http://www.google.com/support/merchants/bin/answer.py?hl=en&answer=160081" target="_blank">Google Taxonomy Listings</a>
 
-<%= form_for :taxon_maper do |f| %>
-  <div class="headers">
-    <label for="header">Taxon</label>
-    <div class="priority">Priority</div>
-    <div class="category">Category</div>
-  </div>    
-<% @taxons.each do |taxon| -%>
-  <p>
-    <label><%= taxon.name %></label>
-    <%= text_field(:priority, taxon.id, :value => taxon.taxon_map.priority.to_s, :class => 'priority') %>
-    <%= text_field(:tax_id, taxon.id, :value => taxon.taxon_map.product_type, :class => 'category') %>
-  </p>
-<% end -%>
-<%= submit_tag 'Update' %>
-<% end %>
+  <a href="http://www.google.com/support/merchants/bin/answer.py?hl=en&answer=160081" target="_blank">Google Taxonomy Listings</a>
+
+  <%= form_for :taxon_maper do |f| %>
+    <table class="table">
+      <tr>
+        <th>Taxon</th>
+        <th>Priority</th>
+        <th>Category</th>
+      </tr>
+      <% @taxons.each do |taxon| -%>
+        <tr>
+          <td><%= taxon.name %></td>
+          <td><%= text_field(:priority, taxon.id, :value => taxon.taxon_map.priority.to_s, :class => 'priority') %></td>
+          <td><%= text_field(:tax_id, taxon.id, :value => taxon.taxon_map.product_type, :class => 'category') %></td>
+        </tr>
+      <% end -%>
+    </table>
+
+    <div class="form-actions" data-hook="buttons">
+      <%= button Spree.t('actions.update'), 'update' %>
+    </div>
+  <% end %>
 </div>

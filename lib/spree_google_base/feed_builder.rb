@@ -37,6 +37,7 @@ module SpreeGoogleBase
       
       @domain = @store ? @store.domains.match(/[\w\.]+/).to_s : opts[:path]
       @domain ||= Spree::GoogleBase::Config[:public_domain]
+      @domain = "http://" + @domain unless @domain.starts_with?("http")
     end
     
     def ar_scope
@@ -132,7 +133,7 @@ module SpreeGoogleBase
     def image_url product, image
       base_url = image.attachment.url(product.google_base_image_size)
       if Spree::Image.attachment_definitions[:attachment][:storage] != :s3
-        base_url = "#{domain}/#{base_url}"
+        base_url = "#{domain}#{base_url}"
       end
 
       base_url

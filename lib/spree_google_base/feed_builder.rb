@@ -12,12 +12,13 @@ module SpreeGoogleBase
       end
     end
 
-    def self.generate_test_file(file_path)
+    def self.generate_test_file(filename)
       exporter = new
-
-      File.open(file_path, "w") do |file|
+      exporter.instance_variable_set("@filename", filename)
+      File.open(exporter.path, "w") do |file|
         exporter.generate_xml file
       end
+      exporter.path
     end
 
     def self.builders
@@ -60,11 +61,16 @@ module SpreeGoogleBase
     end
     
     def path
-      "#{::Rails.root}/tmp/#{filename}"
+      file_path = Rails.root.join('tmp')
+      if defined?(Apartment)
+        file_path = file_path.join(Apartment::Tenant.current_tenant)
+        FileUtils.mkdir_p(file_path)
+      end
+      file_path.join(filename)
     end
     
     def filename
-      "google_base_v#{@store.try(:code)}.xml"
+      @filename ||= "google_base_v#{@store.try(:code)}.xml"
     end
 
     def delete_xml_if_exists

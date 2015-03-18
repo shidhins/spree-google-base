@@ -8,5 +8,4 @@ else
 end
 
 gemspec
-gem 'spree', '1.0.3'
-gem 'spree_multi_domain', :git => 'git://github.com/spree/spree-multi-domain.git'
+gem 'spree', '~> 2.4.0'

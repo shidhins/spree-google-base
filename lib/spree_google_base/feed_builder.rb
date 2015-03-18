@@ -12,12 +12,13 @@ module SpreeGoogleBase
       end
     end
 
-    def self.generate_test_file(file_path)
+    def self.generate_test_file(filename)
       exporter = new
-
-      File.open(file_path, "w") do |file|
+      exporter.instance_variable_set("@filename", filename)
+      File.open(exporter.path, "w") do |file|
         exporter.generate_xml file
       end
+      exporter.path
     end
 
     def self.builders
@@ -29,7 +30,7 @@ module SpreeGoogleBase
     end
 
     def initialize(opts = {})
-      raise "Please pass a public address as the second argument, or configure :public_path in Spree::GoogleBase::Config" unless
+      raise "Please pass a public address as the second argument, or configure :public_domain in Spree::GoogleBase::Config" unless
         opts[:store].present? or (opts[:path].present? or Spree::GoogleBase::Config[:public_domain])
 
       @store = opts[:store] if opts[:store].present?
@@ -37,6 +38,7 @@ module SpreeGoogleBase
       
       @domain = @store ? @store.domains.match(/[\w\.]+/).to_s : opts[:path]
       @domain ||= Spree::GoogleBase::Config[:public_domain]
+      @domain = "http://" + @domain unless @domain.starts_with?("http")
     end
     
     def ar_scope
@@ -59,11 +61,16 @@ module SpreeGoogleBase
     end
     
     def path
-      "#{::Rails.root}/tmp/#{filename}"
+      file_path = Rails.root.join('tmp')
+      if defined?(Apartment)
+        file_path = file_path.join(Apartment::Tenant.current_tenant)
+        FileUtils.mkdir_p(file_path)
+      end
+      file_path.join(filename)
     end
     
     def filename
-      "google_base_v#{@store.try(:code)}.xml"
+      @filename ||= "google_base_v#{@store.try(:code)}.xml"
     end
 
     def delete_xml_if_exists
@@ -102,7 +109,7 @@ module SpreeGoogleBase
     
     def build_product(xml, product)
       xml.item do
-        xml.tag!('link', product_url(product.permalink, :host => domain))
+        xml.tag!('link', product_url(product.slug, :host => domain))
         build_images(xml, product)
         
         GOOGLE_BASE_ATTR_MAP.each do |k, v|
@@ -131,7 +138,9 @@ module SpreeGoogleBase
 
     def image_url product, image
       base_url = image.attachment.url(product.google_base_image_size)
-      base_url = "#{domain}/#{base_url}" unless Spree::Config[:use_s3]
+      if Spree::Image.attachment_definitions[:attachment][:storage] != :s3
+        base_url = "#{domain}#{base_url}"
+      end
 
       base_url
     end
